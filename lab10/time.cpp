@@ -7,6 +7,7 @@ time class and functions
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -62,7 +63,7 @@ public:
    int duration; // in minutes
 };
 
-class Timeslot {
+class TimeSlot {
 public:
    Movie movie; // What movie
    Time startTime; // when the movie starts
@@ -80,7 +81,7 @@ void printMovie(Movie mv){
     cout << mv.title << " " << g << " (" << mv.duration << " min)";
 }
 
-void PrintTimeslot(Timeslot ts)
+void printTimeSlot(TimeSlot ts)
 {
    printMovie(ts.movie);
    Time endtime;
@@ -89,15 +90,61 @@ void PrintTimeslot(Timeslot ts)
    printTime(ts.startTime);
    cout << ", ends by ";
    printTime(endtime);
-   cout << "]";
+   cout << "]" << endl;
    //cout << "[starts at " << printTime(ts.startTime) << ", ends by " << printTime(endtime) << "]";
+}
+
+TimeSlot scheduleAfter(TimeSlot ts, Movie nextMovie)
+{
+   TimeSlot next;
+   next.movie = nextMovie;
+   next.startTime = addMinutes(ts.startTime, ts.movie.duration);
+   return next;
+}
+
+bool timeOverlap(TimeSlot ts1, TimeSlot ts2)
+{
+   int start1 = minutesSinceMidnight(ts1.startTime); // start time in minutes
+   int start2 = minutesSinceMidnight(ts2.startTime); // start time in minutes
+   Time end1 = addMinutes(ts1.startTime, ts1.movie.duration); // end time in minutes
+   Time end2 = addMinutes(ts2.startTime, ts2.movie.duration); // end time in minutes
+   int end11 = minutesSinceMidnight(end1);
+   int end22 = minutesSinceMidnight(end2);
+   int between = abs(start1 - start2); // the mins between the two
+
+   if (start1 == start2)
+   {
+      return true;
+   }
+   else if(start1 < start2)
+   {
+      if(end11 > start2)
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+   else if(start2 < start1)
+   {
+      if(end22 > start1)
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
 }
 
 int main()
 {
-   Time first;
-   Time second;
-   Time newtime;
+   //Time first;
+   //Time second;
+   //Time newtime;
 
    /*cout << "Enter a first time: " << endl;
    cin >> first.h >> first.m; // input time on one line hours and minutes are seperated by spaces
@@ -114,15 +161,27 @@ int main()
    //newtime = addMinutes({8,10}, 75);
    //printTime(newtime);
 
-   Movie one = {"Black Panther", ACTION, 134};
-   Movie two = {"Dumb and Dumber", COMEDY, 100};
-   Movie three = {"50 shades of Gay", ROMANCE, 224};
+   Movie movie1 = {"Black Panther", ACTION, 134};
+   Movie movie2 = {"Dumb and Dumber", COMEDY, 100};
+   Movie movie3 = {"50 shades of Gay", ROMANCE, 224};
 
-   Timeslot morning = {one, {11, 30}};
-   Timeslot day = {one, {2, 30}};
-   Timeslot noon = {two, {12, 00}};
-   Timeslot evening = {two, {17, 26}};
-   Timeslot night = {three, {19, 30}};
+   TimeSlot morning = {movie1, {11, 30}};
+   TimeSlot day = {movie1, {12, 30}};
+   TimeSlot noon = {movie2, {12, 00}};
+   TimeSlot evening = {movie2, {17, 26}};
+   TimeSlot night = {movie3, {19, 30}};
 
-   PrintTimeslot(morning);
+   printTimeSlot(morning);
+   printTimeSlot(day);
+   printTimeSlot(noon);
+   printTimeSlot(evening);
+   printTimeSlot(night);
+
+   if (timeOverlap(morning, day) == true)
+   {
+      cout << "overlap";
+   }
+   else {cout << "u good";}
+
+return 0;
 }
