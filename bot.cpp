@@ -18,13 +18,7 @@ int Coord2D[MAX_ROWS][MAX_COLS]; // creates a global two dimensional array
 bool GatherLumber = true; // true until 300 lumber is reached
 bool FirstFencePlaced = false;
 bool Walk = true;
-
-/*class Coord2D
-{
-public:
-   int r;
-   int c;
-};*/
+//bool center = true;
 
 bool isEmpty(Dwarf & dwarf, int r, int c) // checks if that square alone contains a tree
 {
@@ -110,6 +104,8 @@ void SendToClosestTree(Dwarf & dwarf, std::ostream &log) // send the dwarf to th
    dwarf.start_walk(closest_row, closest_col);
 }
 
+// Creates a 2D array that holds all the enum types in each coordinates
+// should be called everytime there is an update to the map
 void CreateMap(Dwarf &dwarf, std::ostream &log)
 {
    for (int i = 0; i < ROWS; i++)
@@ -142,7 +138,7 @@ void CreateMap(Dwarf &dwarf, std::ostream &log)
 
 void SendDwarfCloseToFence(Dwarf & dwarf, std::ostream &log)
 {
-   if (dwarf.name() && Walk == true)
+   if ((dwarf.name() == 2 || dwarf.name() == 3) && Walk == true)
    {
       for (int i = 0; i < ROWS; i++)
       {
@@ -156,28 +152,43 @@ void SendDwarfCloseToFence(Dwarf & dwarf, std::ostream &log)
             {
                if ((Coord2D[i - 1][j] == EMPTY) && (Coord2D[i - 2][j] == EMPTY))
                {
+                  //CreateMap(dwarf,log);
+                  log << "Walk to " << i - 2 << " " << j << endl;
                   dwarf.start_walk(i - 2, j);
-                  log << " walked ";
+                  Coord2D[i - 2][j] = DWARF;
+                  //CreateMap(dwarf,log);
                   Walk = false;
                   break;
                }
                else if ((Coord2D[i + 1][j] == EMPTY) && (Coord2D[i + 2][j] == EMPTY))
                {
+                  //CreateMap(dwarf,log);
+                  log << "Walk to " << i + 2 << " " << j << endl;
                   dwarf.start_walk(i + 2, j);
+                  Coord2D[i + 2][j] = DWARF;
+                  //CreateMap(dwarf,log);
                   log << " walked ";
                   Walk = false;
                   break;
                }
                else if ((Coord2D[i][j - 1] == EMPTY) && (Coord2D[i - 2][j] == EMPTY))
                {
+                  //CreateMap(dwarf,log);
+                  log << "Walk to " << i << " " << j - 2 << endl;
                   dwarf.start_walk(i, j - 2);
+                  Coord2D[i][j - 2] = DWARF;
+                  //CreateMap(dwarf,log);
                   log << " walked ";
                   Walk = false;
                   break;
                }
                else if ((Coord2D[i][j + 1] == EMPTY) && (Coord2D[i - 2][j] == EMPTY))
                {
+                  //CreateMap(dwarf,log);
+                  log << "Walk to " << i << " " << j + 2 << endl;
                   dwarf.start_walk(i, j + 2);
+                  Coord2D[i][j + 2] = DWARF;
+                  //CreateMap(dwarf,log);
                   log << " walked ";
                   Walk = false;
                   break;
@@ -186,8 +197,17 @@ void SendDwarfCloseToFence(Dwarf & dwarf, std::ostream &log)
          }
       }
    }
-   CreateMap(dwarf,log);
+   CreateMap(dwarf,log); // if i remove this it will not work at all!!!!!!!!!!!!!!!!!!!!!
 }
+
+// temporary function that sends dwarf to center of map (increase points for part b)
+/*{
+   if (center)
+   {
+      dwarf.start_walk(10,10);
+      center = false;
+   }
+}*/
 
 //dwarve 0 builds one fence as a starting point
 void firstFence(Dwarf & dwarf, int r, int c, std::ostream &log)
@@ -208,14 +228,13 @@ void firstFence(Dwarf & dwarf, int r, int c, std::ostream &log)
       }
       else if (isEmpty(dwarf, r-1, c)) {
          dwarf.start_build(NORTH);
-         log << "Constructing first Fence" << endl;
+         log << "Constructing first Fence 4" << endl;
       }
       FirstFencePlaced = true;
-      log << "done with the first func" << endl;
+      log << "Placed the first fence!" << endl;
    }
    //CreateMap(dwarf, log); // creates a map after the first fence has been built
 }
-
 
 void ReadMap(Dwarf &dwarf, std::ostream &log)
 {
@@ -239,12 +258,16 @@ void ReadMap(Dwarf &dwarf, std::ostream &log)
    }
 }
 
+
+// checks if the dwarve is two squares away from the fence and what direction it should build
+// builds if the proper conditions are met
+// updates map at end
 void BuildFence(Dwarf & dwarf, std::ostream &log)
 {
    int r = dwarf.row();
    int c = dwarf.col();
 
-   if (dwarf.name() && Walk == false)
+   if ((dwarf.name() == 2 || dwarf.name() == 3))
    {
       for (int i = 0; i < ROWS; i++)
       {
@@ -254,30 +277,34 @@ void BuildFence(Dwarf & dwarf, std::ostream &log)
          }
          for (int j = 0; j < COLS; j++)
          {
-            if (Coord2D[r - 2][c] == FENCE)
+            if (Coord2D[r - 2][c] == FENCE) // if the dwarve is two away from a fence
             {
                dwarf.start_build(NORTH);
+               Coord2D[r - 1][c] = FENCE;
                log << " built a fence 1" << endl;
                Walk = true;
                break;
             }
-            else if (Coord2D[r + 2][c] == FENCE)
+            else if (Coord2D[r + 2][c] == FENCE) // if the dwarve is two away from a fence
             {
                dwarf.start_build(SOUTH);
+               Coord2D[r + 1][c] = FENCE;
                log << " built a fence 2" << endl;
                Walk = true;
                break;
             }
-            else if (Coord2D[r][c - 2] == FENCE)
+            else if (Coord2D[r][c - 2] == FENCE) // if the dwarve is two away from a fence
             {
                dwarf.start_build(WEST);
+               Coord2D[r][c - 1] = FENCE;
                log << " built a fence 3" << endl;
                Walk = true;
                break;
             }
-            else if (Coord2D[r][c + 2] == FENCE)
+            else if (Coord2D[r][c + 2] == FENCE) // if the dwarve is two away from a fence
             {
                dwarf.start_build(EAST);
+               Coord2D[r][c + 1] = FENCE;
                log << " built a fence 4" << endl;
                Walk = true;
                break;
@@ -285,7 +312,7 @@ void BuildFence(Dwarf & dwarf, std::ostream &log)
          }
       }
    }
-   CreateMap(dwarf,log);
+   //CreateMap(dwarf,log);
 }
 
 
@@ -374,10 +401,14 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
   else if (Walk)
   {
      SendDwarfCloseToFence(dwarf, log);
+     //Coord2D[r][c] = DWARF;
+     //CreateMap(dwarf,log);
   }
   else if (!Walk)
   {
      BuildFence(dwarf, log);
+     //Coord2D[r][c] = DWARF;
+     //CreateMap(dwarf,log);
  }
 
 
