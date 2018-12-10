@@ -25,16 +25,32 @@ bool isFence(Dwarf & dwarf, int r, int c);
 bool isEmpty(Dwarf & dwarf, int r, int c);
 bool isNextToFence(Dwarf & dwarf, int r, int c);
 bool isNextToATree(Dwarf & dwarf, int r, int c);
-//void SendToClosestTree(Dwarf & dwarf, std::ostream &log);
-//void CreateMap(Dwarf &dwarf, std::ostream &log);
+void SendToClosestTree(Dwarf & dwarf, std::ostream &log);
 void SendDwarfCloseToFence(Dwarf & dwarf, std::ostream &log);
 void firstFence(Dwarf & dwarf, int r, int c, std::ostream &log);
-//void BuildFence(Dwarf & dwarf, std::ostream &log);
-//void ReadMap(Dwarf &dwarf, std::ostream &log);
-
-
+void BuildFence(Dwarf & dwarf, std::ostream &log);
+void FindClosestFence(Dwarf & dwarf, int & r_fence, int & c_fence ,std::ostream &log);
+void FindClosestApple(Dwarf & dwarf, int & r_apple, int & c_apple ,std::ostream &log);
 
 // end of all declaration
+
+bool isPumpkin(Dwarf & dwarf, int r, int c) // checks if tthe sqaure contains a fence
+{
+   if (dwarf.look(r, c) == PUMPKIN)
+   {
+      return true;
+   }
+   else { return false;}
+}
+
+bool isApple(Dwarf & dwarf, int r, int c) // checks if tthe sqaure contains a fence
+{
+   if (dwarf.look(r, c) == APPLE_TREE)
+   {
+      return true;
+   }
+   else { return false;}
+}
 
 bool isFence(Dwarf & dwarf, int r, int c) // checks if tthe sqaure contains a fence
 {
@@ -170,8 +186,7 @@ void FindClosestFence(Dwarf & dwarf, int & r_fence, int & c_fence ,std::ostream 
    }
 }
 
-void SendDwarfCloseToFence(Dwarf & dwarf, int r_fence, int c_fence ,std::ostream &log)
-{
+void SendDwarfCloseToFence(Dwarf & dwarf, int r_fence, int c_fence ,std::ostream &log) {
    if (isEmpty(dwarf, r_fence - 2, c_fence))
    {
       log << "Walk to (1) " << r_fence - 2 << " " << c_fence << endl;
@@ -229,6 +244,119 @@ void BuildFence(Dwarf & dwarf, std::ostream &log) {
    else { return; } // if there is no dwarf in a viable build location
 }
 
+void Build(Dwarf & dwarf, std::ostream &log) { // just builds in all directions
+   int r = dwarf.row();
+   int c = dwarf.col();
+
+   //static int fence_count = 1;
+
+   if ((dwarf.look(r - 1, c) == EMPTY))
+   {
+      log << " Constructing NORTH fence" << endl;
+      dwarf.start_build(NORTH);
+   }
+   else if ((dwarf.look(r + 1, c) == EMPTY))
+   {
+      log << " Constructing SOUTH fee" << endl;
+      dwarf.start_build(SOUTH);
+   }
+   else if ((dwarf.look(r, c - 1) == EMPTY))
+   {
+      log << " Constructing WEST fence" << endl;
+      dwarf.start_build(WEST);
+   }
+   else if ((dwarf.look(r, c + 1) == EMPTY))
+   {
+      log << " Constructing EAST fence" << endl;
+      dwarf.start_build(EAST);
+   }
+   else { return; } // if there is no dwarf in a viable build location
+}
+
+void PickApple(Dwarf & dwarf, std::ostream &log) {
+   int r = dwarf.row();
+   int c = dwarf.col();
+
+   //static int fence_count = 1;
+
+   if ((dwarf.look(r - 1, c) == APPLE_TREE))
+   {
+      log << " Picking Apple NORTH " << endl;
+      dwarf.start_pick(NORTH);
+   }
+   else if ((dwarf.look(r + 1, c) == APPLE_TREE))
+   {
+      log << " Picking Apple SOUTH " << endl;
+      dwarf.start_pick(SOUTH);
+   }
+   else if ((dwarf.look(r, c - 1) == APPLE_TREE))
+   {
+      log << " Picking Apple WEST " << endl;
+      dwarf.start_pick(WEST);
+   }
+   else if ((dwarf.look(r, c + 1) == APPLE_TREE))
+   {
+      log << " Picking Apple EAST " << endl;
+      dwarf.start_pick(EAST);
+   }
+   else { return; } // if there is no dwarf in a viable build location
+}
+
+void FindClosestApple(Dwarf & dwarf, int & r_apple, int & c_apple ,std::ostream &log) {
+   int r = dwarf.row();
+   int c = dwarf.col();
+
+   double distance_so_far = 9999;
+   //log << "the row fence is" << r_fence << endl;
+   //log << "the col fence is " << c_fence << endl;
+   for (int i = 0; i < ROWS; i++)
+   {
+      for (int j = 0; j < COLS; j++)
+      {
+         double d = sqrt(pow((r - i),2) + pow((c - j),2));
+         if ((isApple(dwarf, i, j)) && (isNextToFenceEmpty(dwarf, i, j))) // is that square an apple tree and is the space next to it empty
+         {
+            if (d < distance_so_far) // so if the lcoation is next to a tree set the location equal to closest row (will keep going till we find the closest tree)
+            {
+               distance_so_far = d;
+               r_apple = i; // stores the row of the apple
+               c_apple = j; // stores the row of the apple
+            }
+         }
+      }
+   }
+}
+
+void SendDwarfCloseToApple(Dwarf & dwarf, int r_apple, int c_apple ,std::ostream &log) {
+   FindClosestApple(dwarf, r_apple, c_apple ,log);
+   if (isEmpty(dwarf, r_apple - 1, c_apple))
+   {
+      log << "Walk to (1) " << r_apple - 1 << " " << c_apple << endl;
+      dwarf.start_walk(r_apple - 1, c_apple);
+      return;
+   }
+   else if (isEmpty(dwarf, r_apple + 1, c_apple))
+   {
+      log << "Walk to (2) " << r_apple + 1 << " " << c_apple << endl;
+      log << r_apple << " " << c_apple;
+      dwarf.start_walk(r_apple + 1, c_apple);
+      return;
+   }
+   else if (isEmpty(dwarf, r_apple, c_apple - 1))
+   {
+      log << "Walk to (3) " << r_apple << " " << c_apple - 1 << endl;
+      dwarf.start_walk(r_apple, c_apple - 1);
+      return;
+   }
+   else if (isEmpty(dwarf, r_apple, c_apple + 2))
+   {
+      log << "Walk to (4) " << r_apple << " " << c_apple + 1 << endl;
+      dwarf.start_walk(r_apple, c_apple + 1);
+      return;
+   }
+   else { return; }
+}
+
 /* onStart:
 
 An Initialization procedure called at the start of the game.
@@ -268,6 +396,9 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
 
   int r_fence = 0;
   int c_fence = 0;
+
+  int r_apple = 0;
+  int c_apple = 0;
 
   // Phase one of the game is cutting the trees to obtain enough lumber to start building a fence
 
@@ -309,22 +440,20 @@ void onAction(Dwarf &dwarf, int day, int hours, int minutes, ostream &log) {
      }
   }
 
-  // building phase of game
-
-  if (!FirstFencePlaced)
-  {
-     firstFence(dwarf, r, c, log);
+  if (Walk && dwarf.name() == 0 || dwarf.name() == 1) {
+     SendDwarfCloseToApple(dwarf, r_apple, c_apple ,log);
+     Walk = false;
   }
 
-  if (FirstFencePlaced)
-  {
-     BuildFence(dwarf, log);
+
+
+  if (!Walk) {
+     Build(dwarf, log);
+     PickApple(dwarf, log);
   }
-  if (FirstFencePlaced)
-  {
-     FindClosestFence(dwarf, r_fence, c_fence ,log);
-     SendDwarfCloseToFence(dwarf, r_fence, c_fence , log);
-  }
+
+
+
 
 
 
